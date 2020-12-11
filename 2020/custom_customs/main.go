@@ -16,32 +16,38 @@ func main() {
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
-	groupAns := ""
+	groupAns := []string{}
 	sumOfCount := 0
 	for scanner.Scan() {
 		line := scanner.Text()
 
 		if line == "" {
-			sumOfCount += countUniqAns(groupAns)
-			groupAns = ""
-		} else if groupAns == "" {
-			groupAns = line
+			sumOfCount += countCommonAns(groupAns)
+			groupAns = []string{}
 		} else {
-			groupAns += line
+			groupAns = append(groupAns, line)
 		}
 	}
 
-	sumOfCount += countUniqAns(groupAns)
+	sumOfCount += countCommonAns(groupAns)
 
 	fmt.Println(sumOfCount)
 }
 
-func countUniqAns(ans string) int {
-	uniqAns := map[rune]bool{}
+func countCommonAns(ans []string) int {
+	commonAns := map[rune]int{}
 
-	for _, c := range ans {
-		uniqAns[c] = true
+	for _, a := range ans {
+		for _, c := range a {
+			commonAns[c]++
+		}
 	}
 
-	return len(uniqAns)
+	count := 0
+	for _, v := range commonAns {
+		if v == len(ans) {
+			count++
+		}
+	}
+	return count
 }
