@@ -21,6 +21,7 @@ type Instruction struct {
 	operator InsType
 	operand  int
 	executed bool
+	pc, acc  int
 }
 
 func main() {
@@ -54,27 +55,62 @@ func main() {
 	fmt.Println(runInstructions(instructions))
 }
 
-func runInstructions(instruction []Instruction) int {
+func runInstructions(prog []Instruction) int {
 	pc := 0
 	acc := 0
+	stack := []*Instruction{}
 
-	for {
-		if instruction[pc].executed {
-			return acc
+	skipstore := false
+	for pc < len(prog) {
+
+		if prog[pc].executed {
+			lastinst := stack[len(stack)-1]
+
+			pc, acc = lastinst.pc, lastinst.acc
+
+			if lastinst.operator == JMP {
+				lastinst.operator = NOP
+			} else if lastinst.operator == NOP {
+				lastinst.operator = JMP
+			}
+			lastinst.executed = false
+
+			stack = stack[:len(stack)-1]
+
+			skipstore = true
 		}
 
-		instruction[pc].executed = true
+		prog[pc].executed = true
 
-		switch instruction[pc].operator {
+		//fmt.Printf("%v : %v\n", prog[pc].operator, prog[pc].operand)
+
+		switch prog[pc].operator {
 		case ACC:
-			acc += instruction[pc].operand
+			acc += prog[pc].operand
 			pc++
+
 		case JMP:
-			pc += instruction[pc].operand
+			if !skipstore {
+				prog[pc].acc = acc
+				prog[pc].pc = pc
+				stack = append(stack, &prog[pc])
+				skipstore = false
+			}
+			pc += prog[pc].operand
+
+		case NOP:
+			if !skipstore {
+				prog[pc].acc = acc
+				prog[pc].pc = pc
+				stack = append(stack, &prog[pc])
+				skipstore = false
+			}
+			pc++
+
 		default:
 			pc++
 		}
 	}
 
-	return -1
+	return acc
 }
