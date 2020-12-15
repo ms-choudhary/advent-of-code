@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort"
 	"strconv"
 )
-
-const preambleLen = 25
 
 func main() {
 	f, err := os.Open("input")
@@ -25,27 +24,31 @@ func main() {
 		nos = append(nos, n)
 	}
 
-	prevGroup := map[int]bool{}
+	//fmt.Println(findEncryptionWeakness(nos, 257342611))
+	arr := findEncryptionWeakness(nos, 257342611)
+	sort.Ints(arr)
+	fmt.Println(arr[0] + arr[len(arr)-1])
+}
 
-	for i := 0; i < preambleLen; i++ {
-		prevGroup[nos[i]] = true
-	}
+func findEncryptionWeakness(nos []int, n int) []int {
+	i := 0
+	j := 0
+	cursum := 0
+	for j < len(nos) {
 
-	for i := preambleLen; i < len(nos); i++ {
-		sumexists := false
-		for j := i - preambleLen; j < i; j++ {
-			if _, ok := prevGroup[nos[i]-nos[j]]; ok {
-				sumexists = true
-				break
-			}
+		if cursum < n {
+			cursum += nos[j]
+			j++
 		}
 
-		if !sumexists {
-			fmt.Println(nos[i])
-			return
+		if cursum == n {
+			return nos[i:j]
 		}
 
-		prevGroup[nos[i]] = true
-		delete(prevGroup, nos[i-preambleLen])
+		if cursum > n {
+			cursum -= nos[i]
+			i++
+		}
 	}
+	return []int{}
 }
