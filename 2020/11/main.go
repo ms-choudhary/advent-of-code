@@ -52,7 +52,7 @@ func emptySeats(seats [][]rune) (bool, [][]rune) {
 	for i := 0; i < len(seats); i++ {
 		row := []rune{}
 		for j := 0; j < len(seats[i]); j++ {
-			if seats[i][j] == '#' && adjSeatsOccupied(i, j, seats) >= 4 {
+			if seats[i][j] == '#' && adjSeatsOccupied(i, j, seats) >= 5 {
 				changed = true
 				row = append(row, 'L')
 			} else {
@@ -65,17 +65,31 @@ func emptySeats(seats [][]rune) (bool, [][]rune) {
 }
 
 func adjSeatsOccupied(i, j int, seats [][]rune) int {
+
 	res := 0
+
 	for x := i - 1; x <= i+1; x++ {
 		for y := j - 1; y <= j+1; y++ {
 			if x == i && y == j {
 				continue
 			}
 
-			if x >= 0 && x < len(seats) && y >= 0 && y < len(seats[0]) {
-				if seats[x][y] == '#' {
+			xdiff := x - i
+			ydiff := y - j
+
+			for p, q := x, y; ; p, q = p+xdiff, q+ydiff {
+				if p < 0 || q < 0 || p >= len(seats) || q >= len(seats[0]) {
+					break
+				}
+
+				if seats[p][q] == '.' {
+					continue
+				}
+				if seats[p][q] == '#' {
 					res++
 				}
+				break
+
 			}
 		}
 	}
