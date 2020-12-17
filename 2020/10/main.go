@@ -18,7 +18,7 @@ func main() {
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
-	ratings := []int{}
+	ratings := []int{0}
 	for scanner.Scan() {
 		if i, err := strconv.Atoi(scanner.Text()); err == nil {
 			ratings = append(ratings, i)
@@ -27,19 +27,26 @@ func main() {
 
 	sort.Ints(ratings)
 
-	no1s, no3s := 0, 0
-	n := 0
-	for i := 0; i < len(ratings); i++ {
-		if ratings[i]-n > 3 {
-			fmt.Printf("diff betn %v and %v greater than 3\n", ratings[i], n)
-			break
-		} else if ratings[i]-n == 3 {
-			no3s++
-		} else if ratings[i]-n == 1 {
-			no1s++
+	ratings = append(ratings, ratings[len(ratings)-1]+3)
+
+	irrelevant := 0
+	for i := 0; i < len(ratings)-1; {
+		j := i + 1
+		for ; j < len(ratings); j++ {
+			if ratings[j]-ratings[i] > 3 {
+				break
+			}
+			irrelevant++
 		}
-		n = ratings[i]
+		i = j - 1
+		irrelevant -= 1
+		fmt.Printf("%v %v\n", ratings[i], irrelevant)
 	}
 
-	fmt.Println(no1s * (no3s + 1))
+	res := 1
+	for i := 0; i < irrelevant; i++ {
+		res *= 2
+	}
+
+	fmt.Println(res)
 }
