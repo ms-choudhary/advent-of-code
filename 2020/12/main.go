@@ -46,51 +46,81 @@ func main() {
 	fmt.Printf("%v\n", east+north)
 }
 
+func printPos(pos map[Action]int) {
+	fmt.Printf("N: %v, S: %v, E: %v, W: %v\n", pos[North], pos[South], pos[East], pos[West])
+}
+
 func calcInstructions(instructions []Nav) (int, int) {
-	pos := map[Action]int{
+	shippos := map[Action]int{
 		East:  0,
 		North: 0,
 		South: 0,
 		West:  0,
 	}
 
-	curdir := East
+	wayppos := map[Action]int{
+		East:  10,
+		North: 1,
+		South: 0,
+		West:  0,
+	}
 	for _, i := range instructions {
 		switch i.action {
 		case Forward:
-			pos[curdir] += i.value
+			shippos[North] += i.value * wayppos[North]
+			shippos[South] += i.value * wayppos[South]
+			shippos[East] += i.value * wayppos[East]
+			shippos[West] += i.value * wayppos[West]
 		case North:
-			pos[North] += i.value
+			wayppos[North] += i.value
 		case South:
-			pos[South] += i.value
+			wayppos[South] += i.value
 		case East:
-			pos[East] += i.value
+			wayppos[East] += i.value
 		case West:
-			pos[West] += i.value
+			wayppos[West] += i.value
 		case Left:
 			leftCircle := []Action{North, West, South, East}
-			leftIndex := map[Action]int{North: 0, West: 1, South: 2, East: 3}
 			nQuarters := i.value / 90
-			curdir = leftCircle[(leftIndex[curdir]+nQuarters)%4]
+
+			newwayppos := map[Action]int{}
+
+			newwayppos[leftCircle[nQuarters%4]] = wayppos[North]
+			newwayppos[leftCircle[(1+nQuarters)%4]] = wayppos[West]
+			newwayppos[leftCircle[(2+nQuarters)%4]] = wayppos[South]
+			newwayppos[leftCircle[(3+nQuarters)%4]] = wayppos[East]
+
+			wayppos = newwayppos
 		case Right:
 			rightCircle := []Action{North, East, South, West}
-			rightIndex := map[Action]int{North: 0, East: 1, South: 2, West: 3}
 			nQuarters := i.value / 90
-			curdir = rightCircle[(rightIndex[curdir]+nQuarters)%4]
+
+			newwayppos := map[Action]int{}
+
+			newwayppos[rightCircle[nQuarters%4]] = wayppos[North]
+			newwayppos[rightCircle[(3+nQuarters)%4]] = wayppos[West]
+			newwayppos[rightCircle[(2+nQuarters)%4]] = wayppos[South]
+			newwayppos[rightCircle[(1+nQuarters)%4]] = wayppos[East]
+
+			wayppos = newwayppos
 		}
+
+		//printPos(shippos)
+		//printPos(wayppos)
+		//fmt.Println()
 	}
 
 	ew, ns := 0, 0
-	if pos[East] > pos[West] {
-		ew = pos[East] - pos[West]
+	if shippos[East] > shippos[West] {
+		ew = shippos[East] - shippos[West]
 	} else {
-		ew = pos[West] - pos[East]
+		ew = shippos[West] - shippos[East]
 	}
 
-	if pos[North] > pos[South] {
-		ns = pos[North] - pos[South]
+	if shippos[North] > shippos[South] {
+		ns = shippos[North] - shippos[South]
 	} else {
-		ns = pos[South] - pos[North]
+		ns = shippos[South] - shippos[North]
 	}
 
 	return ew, ns
