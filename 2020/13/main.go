@@ -4,11 +4,15 @@ import (
 	"bufio"
 	"fmt"
 	"log"
-	"math"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 )
+
+type Bus struct {
+	id, queue int
+}
 
 func main() {
 	f, err := os.Open("input")
@@ -20,42 +24,40 @@ func main() {
 
 	scanner := bufio.NewScanner(f)
 
-	arvTs := 0
+	buses := []Bus{}
 	if scanner.Scan() {
 		line := scanner.Text()
-		arvTs, _ = strconv.Atoi(line)
-	}
+		fields := strings.Split(line, ",")
 
-	busIDs := []int{}
-	if scanner.Scan() {
-		line := scanner.Text()
-		buses := strings.Split(line, ",")
-
-		for _, b := range buses {
+		for i, b := range fields {
 			if b == "x" {
 				continue
 			}
 			id, _ := strconv.Atoi(b)
-			busIDs = append(busIDs, id)
+			buses = append(buses, Bus{id: id, queue: i})
 		}
 	}
 
-	id, time := earliestBus(busIDs, arvTs)
-	fmt.Println(id * time)
+	sort.Slice(buses, func(i, j int) bool {
+		return buses[i].id > buses[j].id
+	})
+
+	fmt.Println(earliestTs(buses))
 }
 
-func earliestBus(busIDs []int, arvTs int) (int, int) {
-	minDiff := math.MaxInt32
-	minBusId := 0
+func earliestTs(buses []Bus) int {
+	// 99999999999558
+	for ts := 99999999999558; ; ts += buses[0].id {
+		//fmt.Println(ts)
+		satisfies := true
+		for _, b := range buses {
+			if (ts+b.queue-buses[0].queue)%b.id != 0 {
+				satisfies = false
+			}
+		}
 
-	for _, b := range busIDs {
-		if arvTs%b == 0 {
-			minDiff = 0
-			minBusId = b
-		} else if (b*(arvTs/b)+b)-arvTs < minDiff {
-			minDiff = (b*(arvTs/b) + b) - arvTs
-			minBusId = b
+		if satisfies {
+			return ts - buses[0].queue
 		}
 	}
-	return minBusId, minDiff
 }
