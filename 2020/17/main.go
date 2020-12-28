@@ -21,38 +21,45 @@ func main() {
 		slice = append(slice, []rune(scanner.Text()))
 	}
 
-	cubes := make([][][]rune, 1)
-	cubes[0] = slice
+	cubes := make([][][][]rune, 1)
+	cubes[0] = make([][][]rune, 1)
+	cubes[0][0] = slice
 
 	for i := 0; i < 6; i++ {
-		zs := [][][]rune{}
-		for z := -1; z < len(cubes)+1; z++ {
-			ys := [][]rune{}
-			for y := -1; y < len(cubes[0])+1; y++ {
-				xs := []rune{}
-				for x := -1; x < len(cubes[0][0])+1; x++ {
-					n := findActNeighbour(x, y, z, cubes)
-					ch := '.'
-					if at(x, y, z, cubes) == '#' && (n == 2 || n == 3) {
-						ch = '#'
-					} else if at(x, y, z, cubes) == '.' && n == 3 {
-						ch = '#'
+		ws := [][][][]rune{}
+		for w := -1; w < len(cubes)+1; w++ {
+			zs := [][][]rune{}
+			for z := -1; z < len(cubes[0])+1; z++ {
+				ys := [][]rune{}
+				for y := -1; y < len(cubes[0][0])+1; y++ {
+					xs := []rune{}
+					for x := -1; x < len(cubes[0][0][0])+1; x++ {
+						n := findActNeighbour(x, y, z, w, cubes)
+						ch := '.'
+						if at(x, y, z, w, cubes) == '#' && (n == 2 || n == 3) {
+							ch = '#'
+						} else if at(x, y, z, w, cubes) == '.' && n == 3 {
+							ch = '#'
+						}
+						xs = append(xs, ch)
 					}
-					xs = append(xs, ch)
+					ys = append(ys, xs)
 				}
-				ys = append(ys, xs)
+				zs = append(zs, ys)
 			}
-			zs = append(zs, ys)
+			ws = append(ws, zs)
 		}
-		cubes = zs
+		cubes = ws
 	}
 
 	totAct := 0
-	for z := range cubes {
-		for y := range cubes[z] {
-			for x := range cubes[z][y] {
-				if cubes[z][y][x] == '#' {
-					totAct++
+	for w := range cubes {
+		for z := range cubes[w] {
+			for y := range cubes[w][z] {
+				for x := range cubes[w][z][y] {
+					if cubes[w][z][y][x] == '#' {
+						totAct++
+					}
 				}
 			}
 		}
@@ -69,16 +76,18 @@ func printCubes(cubes [][][]rune) {
 	}
 }
 
-func findActNeighbour(x, y, z int, cubes [][][]rune) int {
+func findActNeighbour(x, y, z, w int, cubes [][][][]rune) int {
 	active := 0
 	for i := x - 1; i <= x+1; i++ {
 		for j := y - 1; j <= y+1; j++ {
 			for k := z - 1; k <= z+1; k++ {
-				if i == x && j == y && k == z {
-					continue
-				}
-				if at(i, j, k, cubes) == '#' {
-					active++
+				for l := w - 1; l <= w+1; l++ {
+					if i == x && j == y && k == z && l == w {
+						continue
+					}
+					if at(i, j, k, l, cubes) == '#' {
+						active++
+					}
 				}
 			}
 		}
@@ -86,17 +95,21 @@ func findActNeighbour(x, y, z int, cubes [][][]rune) int {
 	return active
 }
 
-func at(x, y, z int, cubes [][][]rune) rune {
-	if x < 0 || x >= len(cubes[0][0]) {
+func at(x, y, z, w int, cubes [][][][]rune) rune {
+	if x < 0 || x >= len(cubes[0][0][0]) {
 		return '.'
 	}
 
-	if y < 0 || y >= len(cubes[0]) {
+	if y < 0 || y >= len(cubes[0][0]) {
 		return '.'
 	}
 
-	if z < 0 || z >= len(cubes) {
+	if z < 0 || z >= len(cubes[0]) {
 		return '.'
 	}
-	return cubes[z][y][x]
+
+	if w < 0 || w >= len(cubes) {
+		return '.'
+	}
+	return cubes[w][z][y][x]
 }
