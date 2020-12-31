@@ -32,6 +32,7 @@ func main() {
 }
 
 func eval(exp string) int {
+	mults := []int{}
 	acc := 0
 	op := '+'
 	for i := 0; i < len(exp); {
@@ -50,8 +51,12 @@ func eval(exp string) int {
 			}
 			acc = handle(acc, n, op)
 			i = j
-		} else if exp[i] == '+' || exp[i] == '*' {
+		} else if exp[i] == '+' {
 			op = rune(exp[i])
+			i++
+		} else if exp[i] == '*' {
+			mults = append(mults, acc)
+			acc, op = 0, '+'
 			i++
 		} else if exp[i] == '(' {
 			j, p := i+1, 1
@@ -72,8 +77,14 @@ func eval(exp string) int {
 			i = j + 1
 		}
 	}
+	mults = append(mults, acc)
 
-	return acc
+	res := 1
+	for _, n := range mults {
+		res *= n
+	}
+
+	return res
 }
 
 func handle(a, b int, op rune) int {
