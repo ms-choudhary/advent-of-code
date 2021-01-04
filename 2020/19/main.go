@@ -15,19 +15,32 @@ func main() {
 
 	//fmt.Println(generateStrings("0"))
 
+	s42s := generateStrings("42")
+	s31s := generateStrings("31")
+
 	index := map[string]bool{}
 	for _, s := range generateStrings("0") {
 		index[s] = true
 	}
 
-	matches := 0
+	matches := map[string]bool{}
 	for _, s := range readInput() {
-		if _, ok := index[s]; ok {
-			matches++
+		for _, s42 := range s42s {
+			for _, s31 := range s31s {
+				news := removeLoops(s42, s31, s)
+				//if s != news {
+				//fmt.Printf("%s %s\n", news, s)
+				//}
+				if _, ok := index[news]; ok {
+					matches[s] = true
+				}
+			}
 		}
 	}
 
 	fmt.Println(matches)
+
+	fmt.Println(len(matches))
 }
 
 func readInput() []string {
@@ -103,6 +116,34 @@ func combine(vals [][]string) []string {
 	}
 	if len(vals) > 2 {
 		return combine([][]string{res, vals[2]})
+	}
+	return res
+}
+
+func removeLoops(s42, s31, inp string) string {
+	if !strings.Contains(inp, s42) {
+		return inp
+	}
+
+	i := strings.Index(inp, s42) + len(s42)
+	res := inp[:i]
+	for ; i < len(inp); i += len(s42) {
+		if i+len(s42) <= len(inp) && inp[i:i+len(s42)] != s42 {
+			break
+		}
+	}
+
+	if i+len(s31) <= len(inp) && inp[i:i+len(s31)] == s31 {
+		res += s31
+		for ; i < len(inp); i += len(s31) {
+			if i+len(s31) <= len(inp) && inp[i:i+len(s31)] != s31 {
+				break
+			}
+		}
+	}
+
+	if i < len(inp) {
+		res += inp[i:]
 	}
 	return res
 }
