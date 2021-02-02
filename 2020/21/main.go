@@ -5,10 +5,17 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort"
 	"strings"
 )
 
 var ingredientToAlergen = map[string]string{}
+var alergenToIngredient = map[string]string{}
+
+type AlergenFoodMapping struct {
+	alergen string
+	foods   [][]string
+}
 
 func main() {
 
@@ -19,7 +26,8 @@ func main() {
 
 	scanner := bufio.NewScanner(f)
 	ingredientCount := map[string]int{}
-	alergenToFood := map[string][][]string{}
+	alergenMapping := []AlergenFoodMapping{}
+	alergenIndex := map[string]int{}
 	for scanner.Scan() {
 		line := scanner.Text()
 
@@ -33,18 +41,52 @@ func main() {
 		}
 
 		for _, v := range alergs {
-			alergenToFood[v] = append(alergenToFood[v], ings)
+			if i, ok := alergenIndex[v]; ok {
+				alergenMapping[i].foods = append(alergenMapping[i].foods, ings)
+			} else {
+				alergenMapping = append(alergenMapping, AlergenFoodMapping{v, [][]string{ings}})
+				alergenIndex[v] = len(alergenMapping) - 1
+			}
 		}
 	}
 
-	for alerg, foods := range alergenToFood {
-		ings := mapIngredient(alerg, foods)
-		for _, i := range ings {
-			ingredientToAlergen[i] = alerg
+	for {
+		cont := false
+		for _, v := range alergenMapping {
+			if _, ok := alergenToIngredient[v.alergen]; ok {
+				continue
+			}
+			ings := mapIngredient(v.alergen, v.foods)
+
+			if len(ings) > 1 {
+				cont = true
+			} else {
+				ingredientToAlergen[ings[0]] = v.alergen
+				alergenToIngredient[v.alergen] = ings[0]
+			}
+		}
+
+		if cont == false {
+			break
 		}
 	}
 
-	fmt.Println(ingredientToAlergen)
+	mapping := []struct{ ingredient, alergen string }{}
+	for ing, alerg := range ingredientToAlergen {
+		mapping = append(mapping, struct{ ingredient, alergen string }{ingredient: ing, alergen: alerg})
+	}
+
+	sort.Slice(mapping, func(i, j int) bool {
+		return mapping[i].alergen < mapping[j].alergen
+	})
+
+	fmt.Println(mapping)
+
+	i := 0
+	for ; i < len(mapping)-1; i++ {
+		fmt.Print(mapping[i].ingredient + ",")
+	}
+	fmt.Println(mapping[i].ingredient)
 
 	count := 0
 	for ing, c := range ingredientCount {
@@ -71,5 +113,6 @@ func mapIngredient(alergen string, foods [][]string) []string {
 		}
 	}
 
+	//fmt.Printf("alergen: %s - ing: %v\n", alergen, res)
 	return res
 }
