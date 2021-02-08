@@ -1,31 +1,67 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 type LinkedList struct {
 	n    int
 	next *LinkedList
 }
 
+const minN = 1
+const maxN = 1000000
+
+var index = map[int]*LinkedList{}
+
 func main() {
 	//cups := []int{3, 8, 9, 1, 2, 5, 4, 6, 7}
 	cups := []int{1, 6, 7, 2, 4, 8, 3, 5, 9}
 
+	start := time.Now()
+	for i := 10; i <= 1000000; i++ {
+		cups = append(cups, i)
+	}
+	fmt.Printf("tt: add list: %v\n", time.Now().Sub(start))
+
+	start = time.Now()
 	l := createLL(cups)
-	for move := 1; move <= 100; move++ {
+	fmt.Printf("tt: create ll: %v\n", time.Now().Sub(start))
+
+	start = time.Now()
+	for move := 1; move <= 10000000; move++ {
 		//printLL(l)
+		//fmt.Println(l.n)
 		l = mixUp(l)
 		l = l.next
 	}
+	fmt.Printf("tt: mixup moves: %v\n", time.Now().Sub(start))
 
-	printLL(find(l, 1))
+	start = time.Now()
+	p := find(1)
+	fmt.Printf("tt: find key: %v\n", time.Now().Sub(start))
+
+	fmt.Println("ans")
+
+	fmt.Println(p.next.n)
+	fmt.Println(p.next.next.n)
+	fmt.Println(p.next.n * p.next.next.n)
+
+	//printLL(find(1))
 }
 
 func createLL(nums []int) *LinkedList {
 	curr := &LinkedList{n: nums[0]}
+	index[nums[0]] = curr
+
 	p := curr
 	for _, n := range nums[1:] {
-		p.next = &LinkedList{n: n}
+		newp := &LinkedList{n: n}
+
+		index[n] = newp
+		p.next = newp
+
 		p = p.next
 	}
 
@@ -33,11 +69,8 @@ func createLL(nums []int) *LinkedList {
 	return curr
 }
 
-func find(p *LinkedList, n int) *LinkedList {
-	for p.n != n {
-		p = p.next
-	}
-	return p
+func find(n int) *LinkedList {
+	return index[n]
 }
 
 func printLL(curr *LinkedList) {
@@ -54,41 +87,34 @@ func printLL(curr *LinkedList) {
 }
 
 func mixUp(curr *LinkedList) *LinkedList {
-	p := curr.next
-
+	pstart := curr.next
+	pend := pstart
 	pickup := []int{}
-	for i := 1; i <= 3; i++ {
-		pickup = append(pickup, p.n)
-		p = p.next
+
+	for i := 1; i <= 2; i++ {
+		pickup = append(pickup, pend.n)
+		pend = pend.next
 	}
 
-	curr.next = p
+	pickup = append(pickup, pend.n)
+
+	curr.next = pend.next
 
 	dest := curr.n - 1
 	for {
 		if has(pickup, dest) {
 			dest--
 		} else if dest == 0 {
-			dest = 9
+			dest = maxN
 		} else {
 			break
 		}
 	}
 
-	p = curr
-	for {
-		if p.n == dest {
-			tmp := p.next
-			for _, v := range pickup {
-				p.next = &LinkedList{n: v}
-				p = p.next
-			}
-			p.next = tmp
-			break
-		}
-
-		p = p.next
-	}
+	dp := find(dest)
+	tmp := dp.next
+	dp.next = pstart
+	pend.next = tmp
 
 	return curr
 }
